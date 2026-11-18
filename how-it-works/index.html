@@ -421,6 +421,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#build-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build status
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -586,6 +597,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#build-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build status
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -725,6 +747,39 @@ to IST, so the code never relies on the server clock's timezone.</p>
 </tr>
 </tbody>
 </table>
+<h2 id="build-status">Build status</h2>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rules (follow-up due date, flags, weekly summary)</td>
+<td>Built and tested, in Node and inside n8n</td>
+</tr>
+<tr>
+<td>Workflow in n8n</td>
+<td>Built, generic CRM webhook with a secret header</td>
+</tr>
+<tr>
+<td>Email alerts + Google Sheet end-to-end</td>
+<td>Logic tested (<code>node handoff.test.js</code>); not yet run against a live Sheet/Gmail for this generic version</td>
+</tr>
+<tr>
+<td>WhatsApp alerts</td>
+<td>Wired, same pattern as the original deployment; needs a WhatsApp Business account with billing to actually send</td>
+</tr>
+<tr>
+<td>A real CRM connection</td>
+<td>Sample payloads only — see <a href="../crm-mapping/">the field mapping</a>. Capture one real webhook payload per client and adjust <code>fromCrm()</code></td>
+</tr>
+</tbody>
+</table>
+<p>The weekly review runs every Monday at 09:00 IST. Ops/Sales closes the loop in the Sheet by changing Status:
+<code>New → Contacted</code>.</p>
 
 
 
