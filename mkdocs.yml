@@ -1,10 +1,11 @@
-site_name: CRM → Ops move-in handoff
-site_url: https://dakshvanshaj.com/union-living-ops-handoff/
-repo_url: https://github.com/dakshvanshaj/union-living-ops-handoff
+site_name: CRM → Ops follow-up handoff
+site_url: https://dakshvanshaj.com/crm-followup-handoff/
+repo_url: https://github.com/dakshvanshaj/crm-followup-handoff
 nav:
   - Overview: index.md
   - How it works: how-it-works.md
   - Set it up: setup.md
+  - CRM field mapping: crm-mapping.md
 theme:
   name: material
   palette:
