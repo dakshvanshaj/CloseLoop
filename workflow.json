@@ -1,0 +1,637 @@
+{
+  "id": "crmFollowupHandoff1",
+  "name": "CRM to Ops follow-up handoff",
+  "active": false,
+  "nodes": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "Note – what this is",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -320
+      ],
+      "parameters": {
+        "content": "## CRM → Ops follow-up handoff\nYour CRM fires **Closed Won** → a Follow-up task lands in the Follow-ups sheet (with a due date) → WhatsApp/email to the deal's owner.\nEvery Monday 09:00 IST: the weekly follow-up review.\nRules live in one place: the Code nodes (source: handoff.js). Customize `fromCrm()` for your CRM's actual field names.",
+        "width": 580,
+        "height": 220,
+        "color": 7
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "name": "Note – sample payload",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        190
+      ],
+      "parameters": {
+        "content": "### Sample payload\nRight now `send-test.sh` posts a generic CRM-shaped sample lead.\nTo go live: in your CRM (HubSpot, Pipedrive, GoHighLevel, Zoho, ...) create ONE webhook on the deal-closed event pointing here, with custom header `X-Handoff-Secret`. Capture one real payload and adjust `fromCrm()` only.",
+        "width": 460,
+        "height": 220,
+        "color": 3
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "name": "Note – WhatsApp",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        260
+      ],
+      "parameters": {
+        "content": "### WhatsApp + email\nEmail (Gmail) carries the demo. WhatsApp is wired and live; Meta refuses sends until the account has billing set up, so a failed WhatsApp never stops the email.\nProduction: swap for the WATI node (`n8n-nodes-wati` → Send Template Message) with an approved utility template.",
+        "width": 460,
+        "height": 200,
+        "color": 4
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "name": "Note – polling",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        590
+      ],
+      "parameters": {
+        "content": "### Alternative entry (off)\nIf webhooks aren't available from the CRM, poll its \"recently updated deals\" API every 15 min with its access keys. Map its output to the same fields before **Build Follow-up task**.",
+        "width": 460,
+        "height": 180,
+        "color": 5
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000005",
+      "name": "CRM – Lead stage changed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crm-lead-closed",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "a7c1e7c2-1d7e-4c55-9e1a-1a2b3c4d5e6f",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "crmWebhookSecret1",
+          "name": "CRM webhook secret"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000006",
+      "name": "Read Settings",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Settings"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "crmGoogleSheets01",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000007",
+      "name": "Read existing task",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Follow-ups"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "CRM Lead ID",
+              "lookupValue": "={{ $('CRM – Lead stage changed').first().json.body.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "crmGoogleSheets01",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000008",
+      "name": "Build Follow-up task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Business rules for the CRM -> Ops follow-up handoff.\n// Pure functions; the same text is inlined into the n8n Code nodes by build.js.\n// All times are IST wall-clock, held as \"fake UTC\" Dates (read with getUTC*), so host timezone never matters.\n\nconst DAY = 86400000;\nconst IST_MS = 330 * 60000;\nconst DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];\nconst MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\nconst OPEN = ['New'];\n\nconst ist = (d) => new Date(d.getTime() + IST_MS);\nconst pad = (n) => String(n).padStart(2, '0');\nconst fmt = (f) => `${f.getUTCFullYear()}-${pad(f.getUTCMonth() + 1)}-${pad(f.getUTCDate())} ${pad(f.getUTCHours())}:${pad(f.getUTCMinutes())}`;\nconst nice = (f, time) => `${DOW[f.getUTCDay()]} ${f.getUTCDate()} ${MON[f.getUTCMonth()]}` + (time ? ` ${pad(f.getUTCHours())}:${pad(f.getUTCMinutes())}` : '');\n// 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM[...]' -> fake-UTC Date, or null\nfunction parseWall(s) {\n  const m = String(s || '').match(/^(\\d{4})-(\\d{2})-(\\d{2})(?:[ T](\\d{2}):(\\d{2}))?/);\n  return m ? new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0))) : null;\n}\n\n// Blank everywhere means '', 'NaN', 'N/A' or missing.\nfunction clean(v) {\n  const s = v == null ? '' : String(v).trim();\n  return ['', 'nan', 'n/a'].includes(s.toLowerCase()) ? '' : s;\n}\n\nfunction toNumber(v) {\n  const s = clean(v).replace(/[,₹$]/g, '');\n  const n = Number(s);\n  return s && Number.isFinite(n) ? n : null;\n}\n\n// The ONLY place that knows your CRM's webhook field names. Capture one real payload from the\n// client's CRM (HubSpot, Pipedrive, GoHighLevel, Zoho, ...) and adjust here — this is the one-time\n// customization step per client, everything else below is CRM-agnostic.\nfunction fromCrm(body) {\n  const b = body || {};\n  return {\n    leadId: clean(b.id || b.lead_id || b.dealId),\n    name: clean(b.name || b.full_name || [clean(b.first_name), clean(b.last_name)].filter(Boolean).join(' ')),\n    phone: clean(b.phone),\n    email: clean(b.email),\n    team: clean(b.team || b.pipeline || b.source),\n    dealValue: toNumber(b.deal_value ?? b.amount ?? b.value),\n    owner: clean(b.owner || b.owner_name),\n    stage: clean(b.stage),\n  };\n}\n\nfunction isTrigger(lead, stage) {\n  return lead.stage.toLowerCase() === String(stage || '').trim().toLowerCase();\n}\n\n// Follow-up due within 1 business day of the lead closing, by 12:00 IST the next business day.\n// A lead that closes on a weekend gets a Monday 12:00 slot instead of Saturday/Sunday.\n// ponytail: fixed \"1 business day\" window; make it a Settings value if clients want it tighter/looser.\nfunction followUpDueBy(receivedAt) {\n  const r = ist(receivedAt);\n  const dow = r.getUTCDay();\n  if (dow === 0 || dow === 6) {\n    const toMon = dow === 0 ? 1 : 2;\n    const mon = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth(), r.getUTCDate() + toMon, 12, 0));\n    return { dueBy: fmt(mon), flag: 'Closed on a weekend → Monday slot' };\n  }\n  let d = r.getTime();\n  do { d += DAY; } while ([0, 6].includes(new Date(d).getUTCDay()));\n  const nd = new Date(d);\n  const due = new Date(Date.UTC(nd.getUTCFullYear(), nd.getUTCMonth(), nd.getUTCDate(), 12, 0));\n  return { dueBy: fmt(due), flag: '' };\n}\n\nfunction ownerFor(team, settings) {\n  const s = settings || [];\n  const reachable = (r) => clean(r.WhatsApp) || clean(r.Email);\n  const c = s.find((r) => r.Role === 'Team Owner' && String(r.Team).trim().toLowerCase() === String(team || '').trim().toLowerCase() && reachable(r))\n    || s.find((r) => r.Role === 'Fallback Owner' && reachable(r));\n  return c ? { Name: c.Name, WhatsApp: clean(c.WhatsApp), Email: clean(c.Email) } : null;\n}\n\nconst REQUIRED = [['leadId', 'lead id'], ['name', 'lead name'], ['owner', 'sales owner']];\n\n// existing = the Follow-ups row already holding this lead, or null. An update keeps the Status and the first arrival time.\nfunction buildFollowUpTask(lead, receivedAt, settings, existing) {\n  const flags = [];\n  const missing = REQUIRED.filter(([k]) => !lead[k]).map(([, label]) => label);\n  if (missing.length) flags.push('Missing: ' + missing.join(', '));\n  const firstReceived = (existing && parseWall(existing['Received at'])) || null;\n  const rb = followUpDueBy(firstReceived ? new Date(firstReceived.getTime() - IST_MS) : receivedAt);\n  if (rb.flag) flags.push(rb.flag);\n  const c = ownerFor(lead.team, settings);\n  if (!c) flags.push(`No owner set for team ${lead.team || '?'}`);\n  const row = {\n    'Received at': (existing && existing['Received at']) || fmt(ist(receivedAt)), 'CRM Lead ID': lead.leadId || `no-id-${receivedAt.getTime()}`,\n    Lead: lead.name, Phone: lead.phone, Email: lead.email, Team: lead.team,\n    'Deal Value': lead.dealValue == null ? '' : lead.dealValue, Owner: lead.owner,\n    'Follow-up due': rb.dueBy, Status: (existing && existing.Status) || 'New', Flags: flags.join('; '),\n  };\n  const q = (v) => v || '?';\n  const due = parseWall(rb.dueBy);\n  const when = due ? `Follow up by ${nice(due, true)}.` : 'Follow-up date not set.';\n  let text = `New deal closed: ${q(lead.name)}${lead.dealValue != null ? ` (₹${lead.dealValue})` : ''}. ${when} Sales: ${q(lead.owner)}.`;\n  if (row.Flags) text = `⚠ ${row.Flags}. ${text}`;\n  let subject = `New deal: ${q(lead.name)} – ${due ? `follow up by ${nice(due, true)}` : 'no follow-up date'}`;\n  if (row.Flags) subject = `⚠ ${subject}`;\n  if (existing) { text = `Updated: ${text}`; subject = `Updated: ${subject}`; }\n  return { row, to: (c && c.WhatsApp) || null, email: c ? c.Email : '', subject, text, updated: !!existing };\n}\n\n// Weekly agenda for the follow-up review (shared by the text and HTML versions).\nfunction review(rows, now) {\n  const n = ist(now);\n  const today = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());\n  const nowStr = fmt(n);\n  const open = (rows || []).filter((r) => OPEN.includes(r.Status));\n  const days = (r) => Math.floor((n - parseWall(r['Received at'])) / DAY);\n  return {\n    n,\n    dueThisWeek: open.filter((r) => { const d = parseWall(r['Follow-up due']); return d && d >= today && d <= today + 7 * DAY; }),\n    overdue: open.filter((r) => r['Follow-up due'] && String(r['Follow-up due']).slice(0, 16) < nowStr),\n    noOwner: open.filter((r) => /No owner set/.test(r.Flags || '')),\n    oldest: open.filter((r) => parseWall(r['Received at']))\n      .sort((a, b) => parseWall(a['Received at']) - parseWall(b['Received at'])).slice(0, 3)\n      .map((r) => ({ ...r, days: days(r) })),\n  };\n}\n\nfunction weeklySummary(rows, now, sheetUrl) {\n  const v = review(rows, now);\n  return [\n    `Follow-up review – ${nice(v.n)}`,\n    `Due this week: ${v.dueThisWeek.length}`,\n    `Overdue: ${v.overdue.length}`,\n    `No owner set: ${v.noOwner.length}`,\n    ...(v.oldest.length ? ['Waiting longest:', ...v.oldest.map((r) => `- ${r.Lead}, ${r.days} days`)] : []),\n    `Full list: ${sheetUrl}`,\n  ].join('\\n');\n}\n\n// ---- HTML email (inline styles only: email clients drop <style> blocks) ----\n// Every value from the CRM or the Sheet goes through esc(), so a name can't inject markup.\nconst esc = (v) => String(v == null ? '' : v).replace(/[&<>\"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' })[ch]);\nconst niceStr = (s, time) => { const d = parseWall(s); return d ? nice(d, time) : ''; };\nconst FONT = \"font-family:Arial,Helvetica,sans-serif;color:#1f2937;\";\nfunction shell(title, colour, body, sheetUrl, footer) {\n  return `<div style=\"${FONT}max-width:560px;margin:0 auto;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden\">`\n    + `<div style=\"background:${colour};color:#fff;padding:14px 18px;font-size:18px;font-weight:bold\">${title}</div>`\n    + `<div style=\"padding:16px 18px\">${body}`\n    + `<p style=\"margin:18px 0 4px\"><a href=\"${esc(sheetUrl)}\" style=\"background:#0f766e;color:#fff;text-decoration:none;padding:9px 14px;border-radius:6px;font-size:14px;display:inline-block\">Open Follow-ups</a></p>`\n    + `</div><div style=\"padding:10px 18px;background:#f9fafb;color:#6b7280;font-size:12px\">${footer}</div></div>`;\n}\nconst tr = (k, v, strong) => `<tr><td style=\"padding:6px 10px 6px 0;color:#6b7280;font-size:14px;white-space:nowrap;vertical-align:top\">${k}</td>`\n  + `<td style=\"padding:6px 0;font-size:14px;${strong ? 'font-weight:bold;' : ''}\">${v || '<span style=\"color:#b91c1c\">not set</span>'}</td></tr>`;\n\nfunction alertHtml(task, sheetUrl) {\n  const r = task.row;\n  const banner = r.Flags\n    ? `<div style=\"background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;color:#92400e;padding:10px 12px;margin-bottom:14px;font-size:14px\">⚠ ${esc(r.Flags)}</div>` : '';\n  const body = banner + `<table style=\"border-collapse:collapse;width:100%\">`\n    + tr('Lead', esc(r.Lead), true)\n    + tr('Team', esc(r.Team))\n    + tr('Deal value', r['Deal Value'] === '' ? '' : esc(`₹${r['Deal Value']}`))\n    + tr('Follow-up due', esc(niceStr(r['Follow-up due'], true)), true)\n    + tr('Owner', esc(r.Owner))\n    + tr('Phone', esc(r.Phone))\n    + tr('Email', esc(r.Email))\n    + tr('Status', esc(r.Status))\n    + `</table>`;\n  const title = `${task.updated ? 'Updated: ' : ''}New deal${r.Lead ? ` – ${esc(r.Lead)}` : ''}`;\n  return shell(title, r.Flags ? '#b45309' : '#0f766e', body, sheetUrl, 'Sent automatically when the CRM marks a lead Closed Won. Mark the follow-up Contacted in the Follow-ups sheet.');\n}\n\nfunction summaryHtml(rows, now, sheetUrl) {\n  const v = review(rows, now);\n  const tile = (label, num, colour) => `<td style=\"padding:4px;width:33%\"><div style=\"border:1px solid #e5e7eb;border-radius:6px;padding:10px;text-align:center\">`\n    + `<div style=\"font-size:24px;font-weight:bold;color:${colour}\">${num}</div><div style=\"font-size:12px;color:#6b7280\">${label}</div></div></td>`;\n  const list = (heading, items, line) => items.length\n    ? `<p style=\"margin:16px 0 6px;font-weight:bold;font-size:14px\">${heading}</p><ul style=\"margin:0;padding-left:18px;font-size:14px\">${items.map((r) => `<li style=\"margin:3px 0\">${line(r)}</li>`).join('')}</ul>` : '';\n  const body = `<table style=\"border-collapse:collapse;width:100%\"><tr>`\n    + tile('Due this week', v.dueThisWeek.length, '#0f766e')\n    + tile('Overdue', v.overdue.length, v.overdue.length ? '#b91c1c' : '#0f766e')\n    + tile('No owner set', v.noOwner.length, v.noOwner.length ? '#b45309' : '#0f766e')\n    + `</tr></table>`\n    + list('Overdue', v.overdue, (r) => `${esc(r.Lead)} – was due ${esc(niceStr(r['Follow-up due'], true))}`)\n    + list('No owner set', v.noOwner, (r) => `${esc(r.Lead)} (${esc(r.Team)})`)\n    + list('Waiting longest', v.oldest, (r) => `${esc(r.Lead)} – ${r.days} days`);\n  return shell(`Follow-up review – ${nice(v.n)}`, '#0f766e', body, sheetUrl, 'Sent every Monday at 09:00 IST for the weekly follow-up review.');\n}\n\nif (typeof module !== 'undefined') module.exports = { fromCrm, isTrigger, followUpDueBy, ownerFor, buildFollowUpTask, weeklySummary, alertHtml, summaryHtml };\n\nconst lead = fromCrm($('CRM – Lead stage changed').first().json.body);\nconst settings = $('Read Settings').all().map((i) => i.json);\nconst stage = (settings.find((s) => s.Role === 'Trigger stage') || {}).Name || 'Closed Won';\nif (!isTrigger(lead, stage)) return [];\nconst existing = lead.leadId ? ($('Read existing task').all().map((i) => i.json).find((r) => String(r['CRM Lead ID']) === lead.leadId) || null) : null;\nconst t = buildFollowUpTask(lead, new Date(), settings, existing);\nreturn [{ json: { ...t.row, _to: t.to || '', _email: t.email || '', _subject: t.subject, _text: t.text, _html: alertHtml(t, 'https://docs.google.com/spreadsheets/d/REPLACE_WITH_SHEET_ID') } }];"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000009",
+      "name": "Follow-ups – add or update",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Follow-ups"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "CRM Lead ID"
+          ],
+          "schema": []
+        },
+        "options": {
+          "cellFormat": "RAW",
+          "handlingExtraData": "ignoreIt"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "crmGoogleSheets01",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000010",
+      "name": "Has owner contact?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c0ffee00-0000-4000-8000-000000000001",
+              "leftValue": "={{ $('Build Follow-up task').item.json._to }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c0ffee00-0000-4000-8000-000000000002",
+              "leftValue": "={{ $('Build Follow-up task').item.json._email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "name": "Email – alert owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1320,
+        110
+      ],
+      "parameters": {
+        "sendTo": "={{ $('Build Follow-up task').item.json._email }}",
+        "subject": "={{ $('Build Follow-up task').item.json._subject }}",
+        "emailType": "html",
+        "message": "={{ $('Build Follow-up task').item.json._html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "crmGmail000000001",
+          "name": "Gmail account"
+        }
+      },
+      "webhookId": "9e1a0000-0000-4000-8000-000000000011"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "name": "WhatsApp – alert owner",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        -120
+      ],
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "REPLACE_WITH_WHATSAPP_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('Build Follow-up task').item.json._to }}",
+        "textBody": "={{ $('Build Follow-up task').item.json._text }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "whatsAppApi": {
+          "id": "crmWhatsApp000001",
+          "name": "WhatsApp account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000013",
+      "name": "Every 15 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "disabled": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000014",
+      "name": "CRM – Fetch recently updated deals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.example-crm.com/v1/deals?updated_since={{ $now.minus({ minutes: 15 }).toISO() }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "options": {}
+      },
+      "disabled": true,
+      "notes": "Swap the URL/auth for the client's actual CRM API. Map its output to the same fields before Build Follow-up task."
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000015",
+      "name": "Monday 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        900
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000016",
+      "name": "Read Follow-ups",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        220,
+        900
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Follow-ups"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "crmGoogleSheets01",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000017",
+      "name": "Read Settings (Weekly)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        440,
+        900
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "REPLACE_WITH_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Settings"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "crmGoogleSheets01",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000018",
+      "name": "Build weekly summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        900
+      ],
+      "parameters": {
+        "jsCode": "// Business rules for the CRM -> Ops follow-up handoff.\n// Pure functions; the same text is inlined into the n8n Code nodes by build.js.\n// All times are IST wall-clock, held as \"fake UTC\" Dates (read with getUTC*), so host timezone never matters.\n\nconst DAY = 86400000;\nconst IST_MS = 330 * 60000;\nconst DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];\nconst MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\nconst OPEN = ['New'];\n\nconst ist = (d) => new Date(d.getTime() + IST_MS);\nconst pad = (n) => String(n).padStart(2, '0');\nconst fmt = (f) => `${f.getUTCFullYear()}-${pad(f.getUTCMonth() + 1)}-${pad(f.getUTCDate())} ${pad(f.getUTCHours())}:${pad(f.getUTCMinutes())}`;\nconst nice = (f, time) => `${DOW[f.getUTCDay()]} ${f.getUTCDate()} ${MON[f.getUTCMonth()]}` + (time ? ` ${pad(f.getUTCHours())}:${pad(f.getUTCMinutes())}` : '');\n// 'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM[...]' -> fake-UTC Date, or null\nfunction parseWall(s) {\n  const m = String(s || '').match(/^(\\d{4})-(\\d{2})-(\\d{2})(?:[ T](\\d{2}):(\\d{2}))?/);\n  return m ? new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0))) : null;\n}\n\n// Blank everywhere means '', 'NaN', 'N/A' or missing.\nfunction clean(v) {\n  const s = v == null ? '' : String(v).trim();\n  return ['', 'nan', 'n/a'].includes(s.toLowerCase()) ? '' : s;\n}\n\nfunction toNumber(v) {\n  const s = clean(v).replace(/[,₹$]/g, '');\n  const n = Number(s);\n  return s && Number.isFinite(n) ? n : null;\n}\n\n// The ONLY place that knows your CRM's webhook field names. Capture one real payload from the\n// client's CRM (HubSpot, Pipedrive, GoHighLevel, Zoho, ...) and adjust here — this is the one-time\n// customization step per client, everything else below is CRM-agnostic.\nfunction fromCrm(body) {\n  const b = body || {};\n  return {\n    leadId: clean(b.id || b.lead_id || b.dealId),\n    name: clean(b.name || b.full_name || [clean(b.first_name), clean(b.last_name)].filter(Boolean).join(' ')),\n    phone: clean(b.phone),\n    email: clean(b.email),\n    team: clean(b.team || b.pipeline || b.source),\n    dealValue: toNumber(b.deal_value ?? b.amount ?? b.value),\n    owner: clean(b.owner || b.owner_name),\n    stage: clean(b.stage),\n  };\n}\n\nfunction isTrigger(lead, stage) {\n  return lead.stage.toLowerCase() === String(stage || '').trim().toLowerCase();\n}\n\n// Follow-up due within 1 business day of the lead closing, by 12:00 IST the next business day.\n// A lead that closes on a weekend gets a Monday 12:00 slot instead of Saturday/Sunday.\n// ponytail: fixed \"1 business day\" window; make it a Settings value if clients want it tighter/looser.\nfunction followUpDueBy(receivedAt) {\n  const r = ist(receivedAt);\n  const dow = r.getUTCDay();\n  if (dow === 0 || dow === 6) {\n    const toMon = dow === 0 ? 1 : 2;\n    const mon = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth(), r.getUTCDate() + toMon, 12, 0));\n    return { dueBy: fmt(mon), flag: 'Closed on a weekend → Monday slot' };\n  }\n  let d = r.getTime();\n  do { d += DAY; } while ([0, 6].includes(new Date(d).getUTCDay()));\n  const nd = new Date(d);\n  const due = new Date(Date.UTC(nd.getUTCFullYear(), nd.getUTCMonth(), nd.getUTCDate(), 12, 0));\n  return { dueBy: fmt(due), flag: '' };\n}\n\nfunction ownerFor(team, settings) {\n  const s = settings || [];\n  const reachable = (r) => clean(r.WhatsApp) || clean(r.Email);\n  const c = s.find((r) => r.Role === 'Team Owner' && String(r.Team).trim().toLowerCase() === String(team || '').trim().toLowerCase() && reachable(r))\n    || s.find((r) => r.Role === 'Fallback Owner' && reachable(r));\n  return c ? { Name: c.Name, WhatsApp: clean(c.WhatsApp), Email: clean(c.Email) } : null;\n}\n\nconst REQUIRED = [['leadId', 'lead id'], ['name', 'lead name'], ['owner', 'sales owner']];\n\n// existing = the Follow-ups row already holding this lead, or null. An update keeps the Status and the first arrival time.\nfunction buildFollowUpTask(lead, receivedAt, settings, existing) {\n  const flags = [];\n  const missing = REQUIRED.filter(([k]) => !lead[k]).map(([, label]) => label);\n  if (missing.length) flags.push('Missing: ' + missing.join(', '));\n  const firstReceived = (existing && parseWall(existing['Received at'])) || null;\n  const rb = followUpDueBy(firstReceived ? new Date(firstReceived.getTime() - IST_MS) : receivedAt);\n  if (rb.flag) flags.push(rb.flag);\n  const c = ownerFor(lead.team, settings);\n  if (!c) flags.push(`No owner set for team ${lead.team || '?'}`);\n  const row = {\n    'Received at': (existing && existing['Received at']) || fmt(ist(receivedAt)), 'CRM Lead ID': lead.leadId || `no-id-${receivedAt.getTime()}`,\n    Lead: lead.name, Phone: lead.phone, Email: lead.email, Team: lead.team,\n    'Deal Value': lead.dealValue == null ? '' : lead.dealValue, Owner: lead.owner,\n    'Follow-up due': rb.dueBy, Status: (existing && existing.Status) || 'New', Flags: flags.join('; '),\n  };\n  const q = (v) => v || '?';\n  const due = parseWall(rb.dueBy);\n  const when = due ? `Follow up by ${nice(due, true)}.` : 'Follow-up date not set.';\n  let text = `New deal closed: ${q(lead.name)}${lead.dealValue != null ? ` (₹${lead.dealValue})` : ''}. ${when} Sales: ${q(lead.owner)}.`;\n  if (row.Flags) text = `⚠ ${row.Flags}. ${text}`;\n  let subject = `New deal: ${q(lead.name)} – ${due ? `follow up by ${nice(due, true)}` : 'no follow-up date'}`;\n  if (row.Flags) subject = `⚠ ${subject}`;\n  if (existing) { text = `Updated: ${text}`; subject = `Updated: ${subject}`; }\n  return { row, to: (c && c.WhatsApp) || null, email: c ? c.Email : '', subject, text, updated: !!existing };\n}\n\n// Weekly agenda for the follow-up review (shared by the text and HTML versions).\nfunction review(rows, now) {\n  const n = ist(now);\n  const today = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());\n  const nowStr = fmt(n);\n  const open = (rows || []).filter((r) => OPEN.includes(r.Status));\n  const days = (r) => Math.floor((n - parseWall(r['Received at'])) / DAY);\n  return {\n    n,\n    dueThisWeek: open.filter((r) => { const d = parseWall(r['Follow-up due']); return d && d >= today && d <= today + 7 * DAY; }),\n    overdue: open.filter((r) => r['Follow-up due'] && String(r['Follow-up due']).slice(0, 16) < nowStr),\n    noOwner: open.filter((r) => /No owner set/.test(r.Flags || '')),\n    oldest: open.filter((r) => parseWall(r['Received at']))\n      .sort((a, b) => parseWall(a['Received at']) - parseWall(b['Received at'])).slice(0, 3)\n      .map((r) => ({ ...r, days: days(r) })),\n  };\n}\n\nfunction weeklySummary(rows, now, sheetUrl) {\n  const v = review(rows, now);\n  return [\n    `Follow-up review – ${nice(v.n)}`,\n    `Due this week: ${v.dueThisWeek.length}`,\n    `Overdue: ${v.overdue.length}`,\n    `No owner set: ${v.noOwner.length}`,\n    ...(v.oldest.length ? ['Waiting longest:', ...v.oldest.map((r) => `- ${r.Lead}, ${r.days} days`)] : []),\n    `Full list: ${sheetUrl}`,\n  ].join('\\n');\n}\n\n// ---- HTML email (inline styles only: email clients drop <style> blocks) ----\n// Every value from the CRM or the Sheet goes through esc(), so a name can't inject markup.\nconst esc = (v) => String(v == null ? '' : v).replace(/[&<>\"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' })[ch]);\nconst niceStr = (s, time) => { const d = parseWall(s); return d ? nice(d, time) : ''; };\nconst FONT = \"font-family:Arial,Helvetica,sans-serif;color:#1f2937;\";\nfunction shell(title, colour, body, sheetUrl, footer) {\n  return `<div style=\"${FONT}max-width:560px;margin:0 auto;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden\">`\n    + `<div style=\"background:${colour};color:#fff;padding:14px 18px;font-size:18px;font-weight:bold\">${title}</div>`\n    + `<div style=\"padding:16px 18px\">${body}`\n    + `<p style=\"margin:18px 0 4px\"><a href=\"${esc(sheetUrl)}\" style=\"background:#0f766e;color:#fff;text-decoration:none;padding:9px 14px;border-radius:6px;font-size:14px;display:inline-block\">Open Follow-ups</a></p>`\n    + `</div><div style=\"padding:10px 18px;background:#f9fafb;color:#6b7280;font-size:12px\">${footer}</div></div>`;\n}\nconst tr = (k, v, strong) => `<tr><td style=\"padding:6px 10px 6px 0;color:#6b7280;font-size:14px;white-space:nowrap;vertical-align:top\">${k}</td>`\n  + `<td style=\"padding:6px 0;font-size:14px;${strong ? 'font-weight:bold;' : ''}\">${v || '<span style=\"color:#b91c1c\">not set</span>'}</td></tr>`;\n\nfunction alertHtml(task, sheetUrl) {\n  const r = task.row;\n  const banner = r.Flags\n    ? `<div style=\"background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;color:#92400e;padding:10px 12px;margin-bottom:14px;font-size:14px\">⚠ ${esc(r.Flags)}</div>` : '';\n  const body = banner + `<table style=\"border-collapse:collapse;width:100%\">`\n    + tr('Lead', esc(r.Lead), true)\n    + tr('Team', esc(r.Team))\n    + tr('Deal value', r['Deal Value'] === '' ? '' : esc(`₹${r['Deal Value']}`))\n    + tr('Follow-up due', esc(niceStr(r['Follow-up due'], true)), true)\n    + tr('Owner', esc(r.Owner))\n    + tr('Phone', esc(r.Phone))\n    + tr('Email', esc(r.Email))\n    + tr('Status', esc(r.Status))\n    + `</table>`;\n  const title = `${task.updated ? 'Updated: ' : ''}New deal${r.Lead ? ` – ${esc(r.Lead)}` : ''}`;\n  return shell(title, r.Flags ? '#b45309' : '#0f766e', body, sheetUrl, 'Sent automatically when the CRM marks a lead Closed Won. Mark the follow-up Contacted in the Follow-ups sheet.');\n}\n\nfunction summaryHtml(rows, now, sheetUrl) {\n  const v = review(rows, now);\n  const tile = (label, num, colour) => `<td style=\"padding:4px;width:33%\"><div style=\"border:1px solid #e5e7eb;border-radius:6px;padding:10px;text-align:center\">`\n    + `<div style=\"font-size:24px;font-weight:bold;color:${colour}\">${num}</div><div style=\"font-size:12px;color:#6b7280\">${label}</div></div></td>`;\n  const list = (heading, items, line) => items.length\n    ? `<p style=\"margin:16px 0 6px;font-weight:bold;font-size:14px\">${heading}</p><ul style=\"margin:0;padding-left:18px;font-size:14px\">${items.map((r) => `<li style=\"margin:3px 0\">${line(r)}</li>`).join('')}</ul>` : '';\n  const body = `<table style=\"border-collapse:collapse;width:100%\"><tr>`\n    + tile('Due this week', v.dueThisWeek.length, '#0f766e')\n    + tile('Overdue', v.overdue.length, v.overdue.length ? '#b91c1c' : '#0f766e')\n    + tile('No owner set', v.noOwner.length, v.noOwner.length ? '#b45309' : '#0f766e')\n    + `</tr></table>`\n    + list('Overdue', v.overdue, (r) => `${esc(r.Lead)} – was due ${esc(niceStr(r['Follow-up due'], true))}`)\n    + list('No owner set', v.noOwner, (r) => `${esc(r.Lead)} (${esc(r.Team)})`)\n    + list('Waiting longest', v.oldest, (r) => `${esc(r.Lead)} – ${r.days} days`);\n  return shell(`Follow-up review – ${nice(v.n)}`, '#0f766e', body, sheetUrl, 'Sent every Monday at 09:00 IST for the weekly follow-up review.');\n}\n\nif (typeof module !== 'undefined') module.exports = { fromCrm, isTrigger, followUpDueBy, ownerFor, buildFollowUpTask, weeklySummary, alertHtml, summaryHtml };\n\nconst rows = $('Read Follow-ups').all().map((i) => i.json).filter((r) => r.Status);\nconst text = weeklySummary(rows, new Date(), 'https://docs.google.com/spreadsheets/d/REPLACE_WITH_SHEET_ID');\nconst html = summaryHtml(rows, new Date(), 'https://docs.google.com/spreadsheets/d/REPLACE_WITH_SHEET_ID');\nreturn $('Read Settings (Weekly)').all().map((i) => i.json)\n  .filter((s) => ['Team Owner', 'Fallback Owner'].includes(s.Role) && (String(s.WhatsApp || '').trim() || String(s.Email || '').trim()))\n  .map((s) => ({ json: { _to: String(s.WhatsApp || '').trim(), _email: String(s.Email || '').trim(), _subject: text.split('\\n')[0], _text: text, _html: html } }))\n  .filter((m, i, all) => all.findIndex((x) => x._to === m._to && x._email === m._email) === i); // one message per person"
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000019",
+      "name": "Email – weekly summary",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        1020
+      ],
+      "parameters": {
+        "sendTo": "={{ $json._email }}",
+        "subject": "={{ $json._subject }}",
+        "emailType": "html",
+        "message": "={{ $json._html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "crmGmail000000001",
+          "name": "Gmail account"
+        }
+      },
+      "webhookId": "9e1a0000-0000-4000-8000-000000000019"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000020",
+      "name": "WhatsApp – weekly summary",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        780
+      ],
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "REPLACE_WITH_WHATSAPP_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $json._to }}",
+        "textBody": "={{ $json._text }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "whatsAppApi": {
+          "id": "crmWhatsApp000001",
+          "name": "WhatsApp account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "CRM – Lead stage changed": {
+      "main": [
+        [
+          {
+            "node": "Read Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Settings": {
+      "main": [
+        [
+          {
+            "node": "Read existing task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read existing task": {
+      "main": [
+        [
+          {
+            "node": "Build Follow-up task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Follow-up task": {
+      "main": [
+        [
+          {
+            "node": "Follow-ups – add or update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Follow-ups – add or update": {
+      "main": [
+        [
+          {
+            "node": "Has owner contact?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has owner contact?": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp – alert owner",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email – alert owner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Every 15 min": {
+      "main": [
+        [
+          {
+            "node": "CRM – Fetch recently updated deals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday 09:00": {
+      "main": [
+        [
+          {
+            "node": "Read Follow-ups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Follow-ups": {
+      "main": [
+        [
+          {
+            "node": "Read Settings (Weekly)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Settings (Weekly)": {
+      "main": [
+        [
+          {
+            "node": "Build weekly summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build weekly summary": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp – weekly summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email – weekly summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Asia/Kolkata",
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
