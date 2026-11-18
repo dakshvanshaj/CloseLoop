@@ -66,21 +66,43 @@ your team actually uses — and a simple weekly recap catches anything that slip
 </div>
 </div>
 
-<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:36px 0 24px">
-<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;max-width:200px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)">
-<div style="width:28px;height:28px;border-radius:50%;background:#0f766e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 8px">1</div>
-<div style="font-size:13.5px;color:#1f2937">A deal closes in your CRM</div>
+<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:6px;margin:36px 0 10px">
+<div style="width:120px;text-align:center">
+<div style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="#FF7A59" aria-hidden="true"><path d="M18.164 7.93V5.084a2.198 2.198 0 001.267-1.978v-.067A2.2 2.2 0 0017.238.845h-.067a2.2 2.2 0 00-2.193 2.193v.067a2.196 2.196 0 001.252 1.973l.013.006v2.852a6.22 6.22 0 00-2.969 1.31l.012-.01-7.828-6.095A2.497 2.497 0 104.3 4.656l-.012.006 7.697 5.991a6.176 6.176 0 00-1.038 3.446c0 1.343.425 2.588 1.147 3.607l-.013-.02-2.342 2.343a1.968 1.968 0 00-.58-.095h-.002a2.033 2.033 0 102.033 2.033 1.978 1.978 0 00-.1-.595l.005.014 2.317-2.317a6.247 6.247 0 104.782-11.134l-.036-.005zm-.964 9.378a3.206 3.206 0 113.215-3.207v.002a3.206 3.206 0 01-3.207 3.207z"/></svg>
 </div>
-<div style="font-size:20px;color:#9ca3af">→</div>
-<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;max-width:200px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)">
-<div style="width:28px;height:28px;border-radius:50%;background:#0f766e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 8px">2</div>
-<div style="font-size:13.5px;color:#1f2937">The right person is told immediately, by whatever channel they actually check</div>
+<div style="font-size:13px;font-weight:600;color:#1f2937">Deal marked Won</div>
+<div style="font-size:11.5px;color:#9ca3af">in your CRM</div>
 </div>
-<div style="font-size:20px;color:#9ca3af">→</div>
-<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;max-width:200px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)">
-<div style="width:28px;height:28px;border-radius:50%;background:#0f766e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 8px">3</div>
-<div style="font-size:13.5px;color:#1f2937">A short weekly recap catches anything that slipped through</div>
+<div style="font-size:20px;color:#9ca3af;padding-top:12px">→</div>
+<div style="width:120px;text-align:center">
+<div style="width:44px;height:44px;border-radius:50%;background:#0f766e;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
 </div>
+<div style="font-size:13px;font-weight:600;color:#1f2937">CloseLoop takes over</div>
+<div style="font-size:11.5px;color:#9ca3af">finds the owner, sets the due date</div>
+</div>
+<div style="font-size:20px;color:#9ca3af;padding-top:12px">→</div>
+<div style="width:120px;text-align:center">
+<div style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="#4A154B" aria-hidden="true"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+</div>
+<div style="font-size:13px;font-weight:600;color:#1f2937">Owner told in seconds</div>
+<div style="font-size:11.5px;color:#9ca3af">Slack, WhatsApp, or email</div>
+</div>
+<div style="font-size:20px;color:#9ca3af;padding-top:12px">→</div>
+<div style="width:120px;text-align:center">
+<div style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="#34A853" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg>
+</div>
+<div style="font-size:13px;font-weight:600;color:#1f2937">Logged automatically</div>
+<div style="font-size:11.5px;color:#9ca3af">Sheets, Notion, Asana...</div>
+</div>
+</div>
+<p style="text-align:center;font-size:12.5px;color:#9ca3af;margin:4px 0 28px">Every Monday: a quick recap catches anything still open.</p>
+
+<div style="max-width:560px;margin:0 auto 32px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:16px 20px;text-align:center">
+<p style="font-size:13.5px;color:#134e4a;margin:0">57% of companies that cut back on onboarding/handoff investment saw <b>churn rise within six months</b> <span style="color:#5eead4">—</span> a 2026 survey of 161 onboarding leaders. A fast, automatic handoff is the cheap way to not be that company.</p>
 </div>
 
 ## The problem this solves
@@ -99,3 +121,5 @@ your team already uses.
 
 Curious how it actually works under the hood? See [how it works](how-it-works.md) · [set it up](setup.md) ·
 [CRM field mapping](crm-mapping.md).
+
+<p style="font-size:11px;color:#9ca3af;margin-top:24px">Onboarding-investment/churn figure: OnRamp's 2026 State of Customer Onboarding survey (161 leaders). Survey-based, not a controlled study — treat as directional.</p>
