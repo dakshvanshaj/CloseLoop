@@ -1,6 +1,6 @@
-# ClosedWon Relay (n8n)
+# CloseLoop (n8n)
 
-A CRM-to-ops follow-up handoff — the name comes from the CRM stage that triggers it.
+Never let a closed deal go cold — a CRM-to-ops follow-up handoff.
 
 When a deal closes in your CRM, the assigned owner gets a task in a Google Sheet and a WhatsApp/email alert within
 seconds, with a follow-up due date that respects business days and weekends. Every Monday at 09:00 IST, the team
