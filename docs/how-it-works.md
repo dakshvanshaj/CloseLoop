@@ -76,3 +76,16 @@ It goes to every owner listed in Settings, as the agenda for the weekly review.
 | `build.js` | Builds `workflow.json` with `handoff.js` inlined into the Code nodes |
 | `workflow.json` | Import into n8n (no credentials inside) |
 | `payloads/`, `send-test.sh` | Sample CRM leads and the script that sends them |
+
+## Build status
+
+| Part | State |
+|---|---|
+| Rules (follow-up due date, flags, weekly summary) | Built and tested, in Node and inside n8n |
+| Workflow in n8n | Built, generic CRM webhook with a secret header |
+| Email alerts + Google Sheet end-to-end | Logic tested (`node handoff.test.js`); not yet run against a live Sheet/Gmail for this generic version |
+| WhatsApp alerts | Wired, same pattern as the original deployment; needs a WhatsApp Business account with billing to actually send |
+| A real CRM connection | Sample payloads only — see [the field mapping](crm-mapping.md). Capture one real webhook payload per client and adjust `fromCrm()` |
+
+The weekly review runs every Monday at 09:00 IST. Ops/Sales closes the loop in the Sheet by changing Status:
+`New → Contacted`.
