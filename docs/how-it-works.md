@@ -23,16 +23,11 @@ rules that are tested are the same ones that run.
 
 ## Follow-up due rule
 
-Working days are Monday to Friday. Public holidays are ignored for now.
+Due by noon the next business day. Friday and weekend closes get a Monday slot instead of sitting idle over the
+weekend. Working days are Monday to Friday; public holidays are ignored for now.
 
-| Deal closes | Follow-up due |
-|---|---|
-| Monday–Thursday | 12:00 IST the next day |
-| Friday | 12:00 IST the following Monday (weekend skipped) |
-| Saturday or Sunday | 12:00 IST the following Monday |
-
-All times are India time (IST), computed explicitly. n8n's code runner keeps time in UTC even when the server is set
-to IST, so the code never relies on the server clock's timezone.
+The business's own timezone drives this, not the server's — it's set once during setup and applies everywhere
+the rule runs.
 
 ## Flags
 
@@ -90,5 +85,5 @@ It goes to every owner listed in Settings, as the agenda for the weekly review.
 | WhatsApp alerts | Wired, same pattern as the original deployment; needs a WhatsApp Business account with billing to actually send |
 | A real CRM connection | Sample payloads only — see [the field mapping](crm-mapping.md). Capture one real webhook payload per client and adjust `fromCrm()` |
 
-The weekly review runs every Monday at 09:00 IST. Ops/Sales closes the loop in the Sheet by changing Status:
+The weekly review runs every Monday morning. Ops/Sales closes the loop in the Sheet by changing Status:
 `New → Contacted`.
