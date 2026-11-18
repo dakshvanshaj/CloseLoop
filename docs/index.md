@@ -107,19 +107,23 @@ your team actually uses — and a simple weekly recap catches anything that slip
 
 ## The problem this solves
 
-When a deal is marked as won, that's where the sales side's job ends and the ops side's job should start — but most
-of the time, nothing tells ops the deal closed. The handoff depends on someone remembering to mention it, which means:
+The riskiest moment in any sale isn't the sale itself — it's right after, when your newest customer is watching
+closely to see if you'll actually follow through. Most teams drop exactly that moment, because the handoff from
+sales to ops depends on someone remembering to mention it:
 
-- **Ops finds out about a new deal only when something goes wrong** — a client calls asking where their onboarding is.
-- **Friday-afternoon closes sit untouched until Monday**, because nobody's watching for them over the weekend.
+- **The customer who just paid gets ignored** for hours or days, simply because nobody told ops the deal closed.
+- **Details get lost in the handoff itself**, not just delayed — in a 2026 survey of 850+ onboarding
+  professionals, most rated their own handoff process as having real information gaps.
+- **A deal closed late Friday** often doesn't get looked at until Monday — not because anyone's slacking, just
+  because nobody's specifically watching for it over the weekend.
 
-CloseLoop runs that handoff automatically: the moment a deal closes, the right person is told, and a quick weekly
-recap catches anything that still slipped through. There's no new app for anyone to learn — it talks to the tools
-your team already uses.
+CloseLoop closes that exact gap: the moment a deal closes, the right person is told immediately, with everything
+they need — no memory required, nothing lost in the handoff. There's no new app for anyone to learn; it talks to
+the tools your team already uses.
 
 ---
 
 Curious how it actually works under the hood? See [how it works](how-it-works.md) · [set it up](setup.md) ·
 [CRM field mapping](crm-mapping.md).
 
-<p style="font-size:11px;color:#9ca3af;margin-top:24px">Onboarding-investment/churn figure: OnRamp's 2026 State of Customer Onboarding survey (161 leaders). Survey-based, not a controlled study — treat as directional.</p>
+<p style="font-size:11px;color:#9ca3af;margin-top:24px">Onboarding-investment/churn figure: OnRamp's 2026 State of Customer Onboarding survey (161 leaders). Handoff-documentation-gaps figure: Rocketlane's 2026 survey of 850+ onboarding professionals. Both are survey-based, not controlled studies — treat as directional.</p>
