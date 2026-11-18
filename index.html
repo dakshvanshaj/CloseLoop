@@ -23,7 +23,7 @@
     
     
       
-        <title>CRM → Ops follow-up handoff</title>
+        <title>ClosedWon Relay</title>
       
     
     
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#crm-ops-follow-up-handoff" class="md-skip">
+        <a href="#closedwon-relay" class="md-skip">
           Skip to content
         </a>
       
@@ -90,7 +90,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="CRM → Ops follow-up handoff" class="md-header__button md-logo" aria-label="CRM → Ops follow-up handoff" data-md-component="logo">
+    <a href="." title="ClosedWon Relay" class="md-header__button md-logo" aria-label="ClosedWon Relay" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -104,7 +104,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            CRM → Ops follow-up handoff
+            ClosedWon Relay
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -226,13 +226,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="CRM → Ops follow-up handoff" class="md-nav__button md-logo" aria-label="CRM → Ops follow-up handoff" data-md-component="logo">
+    <a href="." title="ClosedWon Relay" class="md-nav__button md-logo" aria-label="ClosedWon Relay" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    CRM → Ops follow-up handoff
+    ClosedWon Relay
   </label>
   
     <div class="md-nav__source">
@@ -516,10 +516,82 @@
   
 
 
-<h1 id="crm-ops-follow-up-handoff">CRM → Ops follow-up handoff</h1>
+<h1 id="closedwon-relay">ClosedWon Relay</h1>
 <p>A small n8n automation for any business with a CRM. When a deal reaches <strong>Closed Won</strong>, the assigned owner hears
 about it within seconds (WhatsApp and email), with a follow-up due date that respects business days. Every Monday
 morning there's a review of what's due, what's overdue, and what has no owner set.</p>
+<figure>
+<svg viewBox="0 0 760 360" role="img" aria-label="Five CRMs (HubSpot, Pipedrive, GoHighLevel, Zoho, Salesforce) all normalize through one mapping function, fromCrm(), into the same follow-up task, which then alerts the owner on WhatsApp and email, logs a row, and feeds the weekly review." style="max-width:100%;height:auto;font-family:inherit">
+  <defs>
+    <marker id="cwr-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <text x="195" y="58" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.75">deal reaches "Closed Won"</text>
+
+  <!-- five CRM sources -->
+  <g font-size="12" fill="currentColor">
+    <rect x="20" y="82" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="90" y="100" text-anchor="middle">HubSpot</text>
+    <rect x="20" y="124" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="90" y="142" text-anchor="middle">Pipedrive</text>
+    <rect x="20" y="166" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="90" y="184" text-anchor="middle">GoHighLevel</text>
+    <rect x="20" y="208" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="90" y="226" text-anchor="middle">Zoho</text>
+    <rect x="20" y="250" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="90" y="268" text-anchor="middle">Salesforce</text>
+  </g>
+
+  <!-- five lines converging on the one mapping point -->
+  <g stroke="currentColor" stroke-width="1" opacity="0.55" marker-end="url(#cwr-arrow)">
+    <line x1="160" y1="96" x2="240" y2="178"/>
+    <line x1="160" y1="138" x2="240" y2="179"/>
+    <line x1="160" y1="180" x2="240" y2="180"/>
+    <line x1="160" y1="222" x2="240" y2="181"/>
+    <line x1="160" y1="264" x2="240" y2="182"/>
+  </g>
+
+  <!-- the one customization point -->
+  <circle cx="250" cy="180" r="9" fill="#0f766e"/>
+  <text x="250" y="206" text-anchor="middle" font-size="12" fill="#0f766e">fromCrm()</text>
+  <text x="250" y="220" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.7">one mapping point per client</text>
+
+  <line x1="259" y1="180" x2="298" y2="180" stroke="currentColor" stroke-width="1.2" marker-end="url(#cwr-arrow)"/>
+
+  <!-- the follow-up task -->
+  <rect x="300" y="150" width="190" height="60" rx="6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+  <text x="395" y="176" text-anchor="middle" font-size="12.5" fill="currentColor">Follow-up task created</text>
+  <text x="395" y="193" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.8">due next business day</text>
+
+  <!-- fan-out to alerts and the sheet -->
+  <g stroke="currentColor" stroke-width="1.1" marker-end="url(#cwr-arrow)" fill="none">
+    <path d="M490,165 Q540,120 578,84"/>
+    <path d="M490,180 L578,180"/>
+    <path d="M490,195 Q540,240 578,276"/>
+  </g>
+  <text x="533" y="118" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.75">alerts owner</text>
+  <text x="533" y="238" text-anchor="middle" font-size="10.5" fill="currentColor" opacity="0.75">logs row</text>
+
+  <g font-size="12" fill="currentColor">
+    <rect x="580" y="70" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="650" y="88" text-anchor="middle">WhatsApp</text>
+    <rect x="580" y="166" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="650" y="184" text-anchor="middle">Email</text>
+    <rect x="580" y="262" width="140" height="28" rx="5" fill="none" stroke="currentColor"/>
+    <text x="650" y="280" text-anchor="middle">Follow-ups sheet</text>
+  </g>
+
+  <!-- weekly review -->
+  <line x1="650" y1="290" x2="650" y2="318" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#cwr-arrow)"/>
+  <text x="672" y="308" font-size="10.5" fill="currentColor" opacity="0.75">every Monday</text>
+  <rect x="560" y="320" width="180" height="32" rx="6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+  <text x="650" y="340" text-anchor="middle" font-size="12" fill="currentColor">Weekly review, 09:00</text>
+</svg>
+<figcaption>Five CRMs, one mapping point. <code>fromCrm()</code> is the only thing that changes per client — the task, the alerts, and the weekly review run the same way regardless of which CRM is behind them.</figcaption>
+</figure>
+
 <h2 id="the-problem-this-solves">The problem this solves</h2>
 <p>In most CRMs, "Closed Won" is where the sales side's job ends and the ops/fulfillment side's job should start — but
 nothing automatically tells ops the deal closed. The handoff depends on someone remembering to mention it, which
