@@ -15,8 +15,8 @@ stays CRM-agnostic.
 Generalized 2026-11-18 from an earlier CRM-to-ops handoff built for a co-living operator (same underlying logic
 and tests, different domain — see git history for the original).
 
-- [What it does and why](docs/index.md) *(still describes the original move-in domain — update before client use)*
-- [How it works](docs/how-it-works.md) *(same — update before client use)*
+- [What it does and why](docs/index.md)
+- [How it works](docs/how-it-works.md): the flow, the due-date math, flags
 - [Set it up](docs/setup.md): run locally, credentials, test payloads, going live
 
 Quick check of the rules: `node handoff.test.js` should print `handoff ok`.
