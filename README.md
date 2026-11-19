@@ -1,5 +1,7 @@
 # CloseLoop (n8n)
 
+[![Tests](https://github.com/dakshvanshaj/CloseLoop/actions/workflows/test.yml/badge.svg)](https://github.com/dakshvanshaj/CloseLoop/actions/workflows/test.yml)
+
 Never let a closed deal go cold — a CRM-to-ops follow-up handoff.
 
 When a deal closes in your CRM, the assigned owner gets a task in a Google Sheet and a WhatsApp/email alert within
