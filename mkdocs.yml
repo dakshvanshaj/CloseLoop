@@ -1,6 +1,6 @@
 site_name: CloseLoop
 site_url: https://dakshvanshaj.com/crm-followup-handoff/
-repo_url: https://github.com/dakshvanshaj/crm-followup-handoff
+repo_url: https://github.com/dakshvanshaj/CloseLoop
 nav:
   - Overview: index.md
   - How it works: how-it-works.md
